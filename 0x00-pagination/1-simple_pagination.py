@@ -8,6 +8,7 @@ from typing import List, Tuple
 def index_range(page: int, page_size: int) -> Tuple[int, int]:
     return ((page - 1) * page_size, ((page - 1) * page_size) + page_size)
 
+
 class Server:
     """Server class to paginate a database of popular baby names.
     """
@@ -31,7 +32,6 @@ class Server:
 
         assert type(page) == int and type(page_size) == int
         assert page > 0 and page_size > 0
-        
         start, end = index_range(page, page_size)
         data = self.dataset()
         if start > len(data):
