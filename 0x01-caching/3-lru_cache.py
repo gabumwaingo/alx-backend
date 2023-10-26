@@ -3,7 +3,7 @@
 from base_caching import BaseCaching
 
 
-class LRUCacache(BaseCaching):
+class LRUCache(BaseCaching):
     """
     a class that inherits from besecaching
     abd implements lru technique
