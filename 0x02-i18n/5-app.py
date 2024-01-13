@@ -1,9 +1,25 @@
 #!/usr/bin/env python3
-""" Basic Babel setup """
-from flask import Flask, render_template, request, g
-from flask_babel import Babel, _
-from typing import Union
+'''Task 4: Force locale with URL parameter
+'''
 
+from typing import Dict, Union
+from flask import Flask, render_template, request, g
+from flask_babel import Babel
+
+
+class Config:
+    '''Config class'''
+
+    DEBUG = True
+    LANGUAGES = ["en", "fr"]
+    BABEL_DEFAULT_LOCALE = "en"
+    BABEL_DEFAULT_TIMEZONE = "UTC"
+
+
+app = Flask(__name__)
+app.config.from_object(Config)
+app.url_map.strict_slashes = False
+babel = Babel(app)
 
 users = {
     1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
@@ -13,68 +29,50 @@ users = {
 }
 
 
-class Config(object):
-    """ Configuration Babel """
-    LANGUAGES = ["en", "fr"]
-    BABEL_DEFAULT_TIMEZONE = 'UTC'
-    BABEL_DEFAULT_LOCALE = 'en'
-
-
-app = Flask(__name__, template_folder='templates')
-app.config.from_object(Config)
-babel = Babel(app)
+def get_user() -> Union[Dict, None]:
+    """Retrieves a user based on a user id.
+    """
+    login_id = request.args.get('login_as')
+    if login_id:
+        return users.get(int(login_id))
+    return None
 
 
 @app.before_request
-def before_request(login_as: int = None):
-    """ Request of each function
+def before_request() -> None:
+    """Performs some routines before each request's resolution.
     """
-    user: dict = get_user()
-    print(user)
-    g.user = user
 
-
-def get_user() -> Union[dict, None]:
-    """ Get the user of the dict
-
-        Return User
-    """
-    login_user = request.args.get('login_as', None)
-
-    if login_user is None:
-        return None
-
-    user: dict = {}
-    user[login_user] = users.get(int(login_user))
-
-    return user[login_user]
+    g.user = get_user()
 
 
 @babel.localeselector
-def get_locale():
-    """ Locale language
+def get_locale() -> str:
+    """Retrieves the locale for a web page.
 
-        Return:
-            Best match to the language
+    Returns:
+        str: best match
     """
-    locale = request.args.get('locale', None)
-
-    if locale and locale in app.config['LANGUAGES']:
+    locale = request.args.get('locale')
+    if locale in app.config['LANGUAGES']:
         return locale
-
     return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
-@app.route('/', methods=['GET'], strict_slashes=False)
-def hello_world():
-    """ Greeting
+@app.route('/')
+def index() -> str:
+    '''default route
 
-        Return:
-            Initial template html
-    """
-    return render_template('5-index.html')
+    Returns:
+        html: homepage
+    '''
+    return render_template("5-index.html")
+
+# uncomment this line and comment the @babel.localeselector
+# you get this error:
+# AttributeError: 'Babel' object has no attribute 'localeselector'
+# babel.init_app(app, locale_selector=get_locale)
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port="5000")
-
+    app.run()
